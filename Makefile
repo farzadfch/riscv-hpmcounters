@@ -1,6 +1,6 @@
 
 CC=riscv64-unknown-linux-gnu-g++
-CFLAGS=-O2
+CFLAGS=-O2 -static
 LDFLAGS=
 
 hpm_counters: hpm_counters.cxx Makefile
