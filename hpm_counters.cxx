@@ -18,7 +18,7 @@
 #define SLEEP_TIME_US (100000)
 
 // How many counters do we support? (change for your micro-architecture).
-#define NUM_COUNTERS (11)
+#define NUM_COUNTERS (16)
 //#define NUM_COUNTERS (32) maximum amount of HPMs is 32
 typedef std::array<long, NUM_COUNTERS> snapshot_t;
 
