@@ -15,7 +15,7 @@
   __tmp; })
 
 // 100e6 cycles
-#define SLEEP_TIME_US (100000)
+#define SLEEP_TIME_US (1000000)
 
 // How many counters do we support? (change for your micro-architecture).
 #define NUM_COUNTERS (16)
@@ -133,6 +133,10 @@ static int handle_stats(int enable)
 
       //printf("Print Time in cycles : %ld\n", read_csr_safe(cycle) - tsc_start);
       //printf("Print Time in instret: %ld\n", read_csr_safe(instret) - irt_start);
+   }
+
+   if (enable == INIT) {
+     printf("##  T0CYCLES = %ld\n", init_counters[0]);
    }
 
    if (sigprocmask(SIG_UNBLOCK, &sig_set, NULL) < 0) {
