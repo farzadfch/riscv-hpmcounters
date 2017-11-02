@@ -25,6 +25,7 @@ typedef std::array<long, NUM_COUNTERS> snapshot_t;
 static char const*               counter_names[NUM_COUNTERS];
 static snapshot_t                init_counters;
 static std::vector <snapshot_t>  counters;
+static bool initialized = false;
 
 
 // use sprintf to attempt to lesson load on debug interface
@@ -157,10 +158,20 @@ void sig_handler(int signum)
    exit(0);
 }
 
+void init_handler(int signum)
+{
+   // We have be instructed to commence
+   handle_stats(INIT);
+   initialized = true;
+}
+
+
+
 int main(int argc, char** argv)
 {
    signal(SIGINT, sig_handler);
    signal(SIGTERM, sig_handler);
+   signal(SIGUSR1, init_handler);
 
    if (argc > 1)
    {
@@ -172,7 +183,10 @@ int main(int argc, char** argv)
    else
    {
       //printf("Starting: counter array size: %d\n", sizeof(counters));
-      handle_stats(INIT);
+      while(!initialized) {
+          usleep(SLEEP_TIME_US);
+      }
+
       while (1)
       {
          usleep(SLEEP_TIME_US);
