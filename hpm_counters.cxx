@@ -161,7 +161,6 @@ void sig_handler(int signum)
 void init_handler(int signum)
 {
    // We have be instructed to commence
-   handle_stats(INIT);
    initialized = true;
 }
 
@@ -183,9 +182,8 @@ int main(int argc, char** argv)
    else
    {
       //printf("Starting: counter array size: %d\n", sizeof(counters));
-      while(!initialized) {
-          usleep(SLEEP_TIME_US);
-      }
+      pause();
+      handle_stats(INIT);
 
       while (1)
       {
