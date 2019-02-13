@@ -182,7 +182,7 @@ int main(int argc, char** argv)
    else
    {
       //printf("Starting: counter array size: %d\n", sizeof(counters));
-      pause();
+      //pause(); Biancolin: start polling immediately in lab2
       handle_stats(INIT);
 
       while (1)
