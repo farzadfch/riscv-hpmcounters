@@ -69,10 +69,10 @@ static int handle_stats(int enable)
 
    int i = 0;         
    snapshot_t snapshot;
-#define READ_CTR(name) do { \
+#define READ_CTR(name, longname) do { \
       if (i < NUM_COUNTERS) { \
          long csr = read_csr_safe(name); \
-         if (enable == INIT)   { init_counters[i] = csr; snapshot[i] = 0; counter_names[i] = #name; } \
+         if (enable == INIT)   { init_counters[i] = csr; snapshot[i] = 0; counter_names[i] = longname; } \
          if (enable == WAKEUP) { snapshot[i] = csr - init_counters[i]; } \
          if (enable == FINISH) { snapshot[i] = csr - init_counters[i]; } \
          i++; \
@@ -80,38 +80,38 @@ static int handle_stats(int enable)
    } while (0)
 
    // Since most processors will not support all 32 HPMs, comment out which hpm counters you don't want to track.
-   READ_CTR(cycle);
-   READ_CTR(instret);
-   READ_CTR(time);
-   READ_CTR(hpmcounter3);
-   READ_CTR(hpmcounter4);
-   READ_CTR(hpmcounter5);
-   READ_CTR(hpmcounter6);
-   READ_CTR(hpmcounter7);
-   READ_CTR(hpmcounter8);
-   READ_CTR(hpmcounter9);
-   READ_CTR(hpmcounter10);
-   READ_CTR(hpmcounter11);
-   READ_CTR(hpmcounter12);
-   READ_CTR(hpmcounter13);
-   READ_CTR(hpmcounter14);
-   READ_CTR(hpmcounter15);
-   READ_CTR(hpmcounter16);
-   READ_CTR(hpmcounter17);
-   READ_CTR(hpmcounter18);
-   READ_CTR(hpmcounter19);
-   READ_CTR(hpmcounter20);
-   READ_CTR(hpmcounter21);
-   READ_CTR(hpmcounter22);
-   READ_CTR(hpmcounter23);
-   READ_CTR(hpmcounter24);
-   READ_CTR(hpmcounter25);
-   READ_CTR(hpmcounter26);
-   READ_CTR(hpmcounter27);
-   READ_CTR(hpmcounter28);
-   READ_CTR(hpmcounter29);
-   READ_CTR(hpmcounter30);
-   READ_CTR(hpmcounter31);
+   READ_CTR(cycle, "Cycles");
+   READ_CTR(instret, "Instructions Retired");
+   READ_CTR(time, "Time");
+   READ_CTR(hpmcounter3, "Loads");
+   READ_CTR(hpmcounter4, "Stores");
+   READ_CTR(hpmcounter5, "I$ miss");
+   READ_CTR(hpmcounter6, "D$ miss");
+   READ_CTR(hpmcounter7, "D$ release");
+   READ_CTR(hpmcounter8, "ITLB miss");
+   READ_CTR(hpmcounter9, "DTLB miss");
+   READ_CTR(hpmcounter10, "L2 TLB miss");
+   READ_CTR(hpmcounter11, "Branches");
+   READ_CTR(hpmcounter12, "Branches Misprediction");
+   READ_CTR(hpmcounter13, "Load-use Interlock");
+   READ_CTR(hpmcounter14, "I$ Blocked");
+   READ_CTR(hpmcounter15, "D$ Blocked");
+   //READ_CTR(hpmcounter16);
+   //READ_CTR(hpmcounter17);
+   //READ_CTR(hpmcounter18);
+   //READ_CTR(hpmcounter19);
+   //READ_CTR(hpmcounter20);
+   //READ_CTR(hpmcounter21);
+   //READ_CTR(hpmcounter22);
+   //READ_CTR(hpmcounter23);
+   //READ_CTR(hpmcounter24);
+   //READ_CTR(hpmcounter25);
+   //READ_CTR(hpmcounter26);
+   //READ_CTR(hpmcounter27);
+   //READ_CTR(hpmcounter28);
+   //READ_CTR(hpmcounter29);
+   //READ_CTR(hpmcounter30);
+   //READ_CTR(hpmcounter31);
 
    counters.push_back(snapshot);
 
