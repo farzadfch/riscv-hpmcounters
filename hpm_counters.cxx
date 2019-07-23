@@ -15,10 +15,10 @@
   __tmp; })
 
 // 100e6 cycles
-#define SLEEP_TIME_US (1000000)
+#define SLEEP_TIME_US (4000)
 
 // How many counters do we support? (change for your micro-architecture).
-#define NUM_COUNTERS (16)
+#define NUM_COUNTERS (2)
 //#define NUM_COUNTERS (32) maximum amount of HPMs is 32
 typedef std::array<long, NUM_COUNTERS> snapshot_t;
 
@@ -53,7 +53,7 @@ int bytes_added(int result)
 #if 1
 static int handle_stats(int enable)
 {
-   long tsc_start = read_csr_safe(cycle);
+   /*long tsc_start = read_csr_safe(cycle);
    long irt_start = read_csr_safe(instret);
 
    sigset_t sig_set;
@@ -63,13 +63,13 @@ static int handle_stats(int enable)
    if (sigprocmask(SIG_BLOCK, &sig_set, NULL) < 0) {
       perror ("sigprocmask failed");
       return 1;
-   }
+   }*/
 
-   static size_t step = 0; // increment every time handle_stats is called
+   //static size_t step = 0; // increment every time handle_stats is called
 
-   int i = 0;         
+   //int i = 0;         
    snapshot_t snapshot;
-#define READ_CTR(name, longname) do { \
+#define READ_CTR_2(name, longname) do { \
       if (i < NUM_COUNTERS) { \
          long csr = read_csr_safe(name); \
          if (enable == INIT)   { init_counters[i] = csr; snapshot[i] = 0; counter_names[i] = longname; } \
@@ -79,23 +79,31 @@ static int handle_stats(int enable)
       } \
    } while (0)
 
+#define READ_CTR(ii, name) do { \
+         long csr = read_csr_safe(name); \
+         snapshot[ii] = csr; \
+   } while (0)
+
+   READ_CTR(0, cycle);
+   READ_CTR(1, hpmcounter4);
+
    // Since most processors will not support all 32 HPMs, comment out which hpm counters you don't want to track.
-   READ_CTR(cycle, "Cycles");
-   READ_CTR(instret, "Instructions Retired");
-   READ_CTR(time, "Time");
-   READ_CTR(hpmcounter3, "Loads");
-   READ_CTR(hpmcounter4, "Stores");
-   READ_CTR(hpmcounter5, "I$ miss");
-   READ_CTR(hpmcounter6, "D$ miss");
-   READ_CTR(hpmcounter7, "D$ release");
-   READ_CTR(hpmcounter8, "ITLB miss");
-   READ_CTR(hpmcounter9, "DTLB miss");
-   READ_CTR(hpmcounter10, "L2 TLB miss");
-   READ_CTR(hpmcounter11, "Branches");
-   READ_CTR(hpmcounter12, "Branches Misprediction");
-   READ_CTR(hpmcounter13, "Load-use Interlock");
-   READ_CTR(hpmcounter14, "I$ Blocked");
-   READ_CTR(hpmcounter15, "D$ Blocked");
+   //READ_CTR(cycle, "Cycles");
+   //READ_CTR(instret, "Instructions Retired");
+   //READ_CTR(time, "Time");
+   //READ_CTR(hpmcounter3, "Loads");
+   //READ_CTR(hpmcounter4);
+   //READ_CTR(hpmcounter5, "I$ miss");
+   //READ_CTR(hpmcounter6, "D$ miss");
+   //READ_CTR(hpmcounter7, "D$ release");
+   //READ_CTR(hpmcounter8, "ITLB miss");
+   //READ_CTR(hpmcounter9, "DTLB miss");
+   //READ_CTR(hpmcounter10, "L2 TLB miss");
+   //READ_CTR(hpmcounter11, "Branches");
+   //READ_CTR(hpmcounter12, "Branches Misprediction");
+   //READ_CTR(hpmcounter13, "Load-use Interlock");
+   //READ_CTR(hpmcounter14, "I$ Blocked");
+   //READ_CTR(hpmcounter15, "D$ Blocked");
    //READ_CTR(hpmcounter16);
    //READ_CTR(hpmcounter17);
    //READ_CTR(hpmcounter18);
@@ -118,32 +126,34 @@ static int handle_stats(int enable)
    //printf("Snapshot Time in cycles : %ld\n", read_csr_safe(cycle) - tsc_start);
    //printf("Snapshot Time in instret: %ld\n", read_csr_safe(instret) - irt_start);
    //if (step % 10 == 0) printf("heartbeat: %d\n", step);
-   step++;
+   //step++;
 
 #undef READ_CTR
-   if (enable == FINISH || step % 30 == 0) { 
+   //if (enable == FINISH || step % 30 == 0) { 
+   if (enable == FINISH) { 
       for (auto & element : counters) {
-         for (int i = 0; i < NUM_COUNTERS; i++) {
+         printf("%ld,%ld\n", element[0], element[1]);
+         /*for (int i = 0; i < NUM_COUNTERS; i++) {
             long c = element[i];
             if (c) {
                printf("##  %s = %ld\n", counter_names[i], c);
             }
-         }
+         }*/
       }
-      if (enable != FINISH) counters.clear();
+      //if (enable != FINISH) counters.clear();
 
       //printf("Print Time in cycles : %ld\n", read_csr_safe(cycle) - tsc_start);
       //printf("Print Time in instret: %ld\n", read_csr_safe(instret) - irt_start);
    }
 
-   if (enable == INIT) {
+   /*if (enable == INIT) {
      printf("##  T0CYCLES = %ld\n", init_counters[0]);
-   }
+   }*/
 
-   if (sigprocmask(SIG_UNBLOCK, &sig_set, NULL) < 0) {
+   /*if (sigprocmask(SIG_UNBLOCK, &sig_set, NULL) < 0) {
       perror ("sigprocmask unblock failed");
       return 1;
-   }
+   }*/
 
    return 0;
 }
@@ -172,26 +182,32 @@ int main(int argc, char** argv)
    signal(SIGTERM, sig_handler);
    signal(SIGUSR1, init_handler);
 
+   unsigned long sleep_time = SLEEP_TIME_US;
    if (argc > 1)
    {
+      sleep_time = strtoul(argv[1], NULL, 0);
+   }
+
+   //if (argc > 1)
+   //{
       // only print the final cycle and instret counts.
       //printf ("Pausing, argc=%d\n", argc);
-      handle_stats(INIT);
-      pause();
-   }
-   else
-   {
+      //handle_stats(INIT);
+      //pause();
+   //}
+   //else
+   //{
       //printf("Starting: counter array size: %d\n", sizeof(counters));
       //pause(); Biancolin: start polling immediately in lab2
       handle_stats(INIT);
 
       while (1)
       {
-         usleep(SLEEP_TIME_US);
+         usleep(sleep_time);
          handle_stats(WAKEUP);
       }
       //printf("Exiting\n");
-   }
+   //}
 
    return 0;
 }
