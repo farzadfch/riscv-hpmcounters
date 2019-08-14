@@ -15,10 +15,10 @@
   __tmp; })
 
 // 100e6 cycles
-#define SLEEP_TIME_US (4000)
+#define SLEEP_TIME_US (500)
 
 // How many counters do we support? (change for your micro-architecture).
-#define NUM_COUNTERS (2)
+#define NUM_COUNTERS (6)
 //#define NUM_COUNTERS (32) maximum amount of HPMs is 32
 typedef std::array<long, NUM_COUNTERS> snapshot_t;
 
@@ -85,7 +85,11 @@ static int handle_stats(int enable)
    } while (0)
 
    READ_CTR(0, cycle);
-   READ_CTR(1, hpmcounter4);
+   READ_CTR(1, hpmcounter4); // D$ miss (Acquire, Get, and Put)
+   READ_CTR(2, hpmcounter3); // I$ miss (Get)
+   READ_CTR(3, hpmcounter5); // D$ channel C (Release, ReleaseData, ProbeAck, ProbeAckData)
+   READ_CTR(4, hpmcounter7); // D$ writeback
+   READ_CTR(5, hpmcounter8); // blkdev Put and Get
 
    // Since most processors will not support all 32 HPMs, comment out which hpm counters you don't want to track.
    //READ_CTR(cycle, "Cycles");
@@ -132,7 +136,13 @@ static int handle_stats(int enable)
    //if (enable == FINISH || step % 30 == 0) { 
    if (enable == FINISH) { 
       for (auto & element : counters) {
-         printf("%ld,%ld\n", element[0], element[1]);
+         for (int i = 0; i < NUM_COUNTERS; i++) {
+            printf("%ld", element[i]);
+            if (i == NUM_COUNTERS - 1)
+               printf("\n");
+            else
+               printf(",");
+         }
          /*for (int i = 0; i < NUM_COUNTERS; i++) {
             long c = element[i];
             if (c) {
@@ -178,25 +188,44 @@ void init_handler(int signum)
 
 int main(int argc, char** argv)
 {
+   handle_stats(INIT);
+
    signal(SIGINT, sig_handler);
    signal(SIGTERM, sig_handler);
-   signal(SIGUSR1, init_handler);
+   //signal(SIGUSR1, init_handler);
 
    unsigned long sleep_time = SLEEP_TIME_US;
-   if (argc > 1)
-   {
-      sleep_time = strtoul(argv[1], NULL, 0);
+   bool final_only = false;
+   int opt;
+
+   while ((opt = getopt(argc, argv, "i:f")) != -1) {
+      switch (opt) {
+      case 'i':
+         sleep_time = strtoul(optarg, NULL, 0);
+         break;
+      case 'f':
+         final_only = true;
+         break;
+      }
    }
 
-   //if (argc > 1)
-   //{
+   if (final_only) pause();
+
+   while (1)
+   {
+      usleep(sleep_time);
+      handle_stats(WAKEUP);
+   }
+
+   /*if (argc > 1)
+   {
       // only print the final cycle and instret counts.
       //printf ("Pausing, argc=%d\n", argc);
-      //handle_stats(INIT);
-      //pause();
-   //}
-   //else
-   //{
+      handle_stats(INIT);
+      pause();
+   }
+   else
+   {
       //printf("Starting: counter array size: %d\n", sizeof(counters));
       //pause(); Biancolin: start polling immediately in lab2
       handle_stats(INIT);
@@ -207,7 +236,8 @@ int main(int argc, char** argv)
          handle_stats(WAKEUP);
       }
       //printf("Exiting\n");
-   //}
+   }
+   */
 
    return 0;
 }
