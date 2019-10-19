@@ -188,12 +188,6 @@ void init_handler(int signum)
 
 int main(int argc, char** argv)
 {
-   handle_stats(INIT);
-
-   signal(SIGINT, sig_handler);
-   signal(SIGTERM, sig_handler);
-   //signal(SIGUSR1, init_handler);
-
    unsigned long sleep_time = SLEEP_TIME_US;
    bool final_only = false;
    int opt;
@@ -209,7 +203,17 @@ int main(int argc, char** argv)
       }
    }
 
-   if (final_only) pause();
+   if (final_only) {
+      printf("HPMCs: ");
+      handle_stats(FINISH);
+      exit(0);
+   }
+
+   handle_stats(INIT);
+
+   signal(SIGINT, sig_handler);
+   signal(SIGTERM, sig_handler);
+   //signal(SIGUSR1, init_handler);
 
    while (1)
    {
