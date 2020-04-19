@@ -204,7 +204,6 @@ int main(int argc, char** argv)
    }
 
    if (final_only) {
-      printf("HPMCs: ");
       handle_stats(FINISH);
       exit(0);
    }
